@@ -11,7 +11,6 @@ import mlx_whisper
 def audio_thread_func(recorder: LiveRecorder):
     print("[Info] Audio thread started.")
     recorder.start()
-    print("[Info] Audio thread stopped.")
 
 def transcribe_thread_func(recorder: LiveRecorder, model_name="mlx-community/whisper-large-v3-turbo"):
     print("[Info] Loading model...")
@@ -60,6 +59,7 @@ if __name__ == "__main__":
         input("Press Enter to stop...\n")
     finally:
         recorder.stop()
+        print("[Info] Audio thread stopped.")
         audio_thread.join()
         transcribe_thread.join()
         print("All threads terminated.")

@@ -1,8 +1,5 @@
 import sounddevice as sd
-import soundfile as sf
 import numpy as np
-import subprocess
-import os
 import time
 import queue
 
@@ -23,9 +20,9 @@ class LiveRecorder:
         chunk = np.squeeze(chunk).astype(np.float32)
         rms = np.sqrt(np.mean(chunk ** 2))  # Root Mean Square (energy)
         if rms < threshold:
+            print('[Debug] Silence', flush=True)
             return True
         else:
-            print('Silence', flush=True)
             return False
         
 
