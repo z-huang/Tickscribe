@@ -1,5 +1,5 @@
 # python=3.11
-PyQt6
+PySide6
 mlx-lm
 mlx-whisper
 sounddevice
