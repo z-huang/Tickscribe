@@ -1,4 +1,3 @@
-# recorder_py3.11.py
 import sounddevice as sd
 import soundfile as sf
 import numpy as np
@@ -6,6 +5,7 @@ import threading
 import subprocess
 import os
 import time
+
 
 class Recorder:
     def __init__(self, samplerate=64000, channels=1, subtype='PCM_16'):
@@ -21,7 +21,7 @@ class Recorder:
             self._frames.append(indata.copy())
 
     def start(self):
-        """開始錄音"""
+        """Start recording"""
         self._frames = []
         self._running = True
         self.stream = sd.InputStream(
@@ -32,7 +32,7 @@ class Recorder:
         self.stream.start()
 
     def stop(self):
-        """停止錄音"""
+        """Stop recording"""
         self._running = False
         # 確保抓完最後一批資料
         time.sleep(0.1)
@@ -40,7 +40,7 @@ class Recorder:
         self.stream.close()
 
     def save_wav(self, filename: str):
-        """把錄好的資料存成 WAV"""
+        """Store audio as WAV file"""
         if not filename.lower().endswith('.wav'):
             filename += '.wav'
         data = np.concatenate(self._frames, axis=0)
@@ -51,10 +51,9 @@ class Recorder:
 if __name__ == '__main__':
     rec = Recorder(samplerate=64000, channels=1)
 
-    # －－ 互動式錄音示例 －－
-    input("按下 Enter 開始錄音…")
+    input("Press Enter to start recording…")
     rec.start()
-    print("…錄音中，按下 Enter 停止")
+    print("…Recording..., press Enter to stop")
     input()
     rec.stop()
 
