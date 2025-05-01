@@ -1,11 +1,10 @@
 import sounddevice as sd
 import soundfile as sf
 import numpy as np
-import threading
 import subprocess
 import os
 import time
-
+import queue
 
 class Recorder:
     def __init__(self, samplerate=64000, channels=1, subtype='PCM_16'):
@@ -33,7 +32,7 @@ class Recorder:
     def stop(self):
         """Stop recording"""
         self._running = False
-        # 等待 buffer flush
+        # make sure we get the last frames
         time.sleep(0.1)
         self.stream.stop()
         self.stream.close()
@@ -75,25 +74,31 @@ class Recorder:
         print(f"Saved MP4: {mp4_path}")
         return mp4_path
 
+class LiveRecorder:
+    def __init__(self, sample_rate=16000, channels=1, block_duration=2.0):
+        self.sample_rate = sample_rate
+        self.channels = channels
+        self.blocksize = int(sample_rate * block_duration)
+        self.queue = queue.Queue()
+        self.running = False
 
-if __name__ == '__main__':
-    rec = Recorder(samplerate=64000, channels=1)
+    def _callback(self, indata, frames, time_info, status):
+        if self.running:
+            self.queue.put(indata.copy())
 
-    input("Press Enter to start recording…")
-    rec.start()
-    print("…Recording..., press Enter to stop")
-    input()
-    rec.stop()
+    def start(self):
+        self.running = True
+        self.stream = sd.InputStream(
+            samplerate=self.sample_rate,
+            channels=self.channels,
+            blocksize=self.blocksize,
+            callback=self._callback
+        )
+        self.stream.start()
 
-    # 先保存 WAV
-    wav = rec.save_wav("my_recording.wav")
+    def stop(self):
+        self.running = False
+        time.sleep(0.1)
+        self.stream.stop()
+        self.stream.close()
 
-    # 再按 2 秒一段切片
-    segments = rec.get_segments(segment_seconds=2.0)
-    print(f"共切出 {len(segments)} 段，每段 shape = {segments[0].shape}")
-
-    # （可选）把每段保存成独立文件
-    for idx, seg in enumerate(segments, 1):
-        fname = f"segment_{idx:03d}.wav"
-        sf.write(fname, seg, rec.samplerate, subtype=rec.subtype)
-        print(f"Saved {fname}")
