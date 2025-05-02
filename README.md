@@ -35,6 +35,11 @@ Follow these straightforward steps to get Tickscribe up and running on your syst
     ```bash
     pip install -r requirements.txt
     ```
+    For MAC, before installing RealtimeSTT please execute:
+
+    ```bash
+    brew install portaudio
+    ```
 
 4.  **Run Tickscribe:** Execute the main script to start the transcription process:
     ```bash
