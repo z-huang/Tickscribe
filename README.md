@@ -1,4 +1,4 @@
-# Tickscribe: Lightweight Real-time Audio Transcription and Summarization
+# Tickscribe: Lightweight Real-time Audio Transcription and Summarization for MAC(M-series)
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/z-huang/Tickscribe/commits/main)
 [![Python Version](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/downloads/)
