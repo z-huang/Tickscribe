@@ -1,6 +1,6 @@
 import sys
 import threading
-from transcribe import transcribe_file
+from utils import transcribe_file
 import re
 import os
 import sqlite3
