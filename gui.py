@@ -3,10 +3,13 @@ import threading
 from transcribe import transcribe_file
 import re
 import os
+import sqlite3
+from datetime import datetime
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
-    QFileDialog, QListWidgetItem, QInputDialog
+    QFileDialog, QListWidgetItem, QInputDialog,
+    QMessageBox
 )
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import (
@@ -26,6 +29,121 @@ def load_ui_widget(path: str, parent: QWidget = None) -> QWidget:
     if widget is None:
         raise RuntimeError(f"Failed to load UI from: {path}")
     return widget
+
+
+class Database:
+    def __init__(self, db_path='transcripts.db'):
+        self.db_path = db_path
+        self.init_db()
+
+    def get_connection(self):
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def init_db(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        # Create sessions table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+        
+        # Create transcripts table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS transcripts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL,
+            text TEXT NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE
+        )
+        ''')
+        
+        conn.commit()
+        conn.close()
+    
+    def get_all_sessions(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, name, created_at FROM sessions ORDER BY created_at DESC')
+        sessions = cursor.fetchall()
+        conn.close()
+        return sessions
+    
+    def create_session(self, name):
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO sessions (name) VALUES (?)', (name,))
+            session_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
+            return session_id
+        except sqlite3.IntegrityError:
+            # Handle duplicate session name
+            return None
+    
+    def get_session_id_by_name(self, name):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM sessions WHERE name = ?', (name,))
+        result = cursor.fetchone()
+        conn.close()
+        return result['id'] if result else None
+    
+    def get_session_name_by_id(self, session_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT name FROM sessions WHERE id = ?', (session_id,))
+        result = cursor.fetchone()
+        conn.close()
+        return result['name'] if result else None
+    
+    def add_transcript(self, session_id, text):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            'INSERT INTO transcripts (session_id, text) VALUES (?, ?)',
+            (session_id, text)
+        )
+        conn.commit()
+        conn.close()
+    
+    def get_transcripts_by_session_id(self, session_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT id, text, timestamp FROM transcripts WHERE session_id = ? ORDER BY timestamp',
+            (session_id,)
+        )
+        transcripts = cursor.fetchall()
+        conn.close()
+        return transcripts
+    
+    def delete_session(self, session_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM sessions WHERE id = ?', (session_id,))
+        conn.commit()
+        conn.close()
+    
+    def rename_session(self, session_id, new_name):
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('UPDATE sessions SET name = ? WHERE id = ?', (new_name, session_id))
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.IntegrityError:
+            # Handle duplicate session name
+            return False
 
 
 class TranscriptionWorker(QObject):
@@ -72,8 +190,11 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.ui = load_ui_widget('ui/mainwindow.ui', self)
 
-        # 目前使用的 session 檔案 (完整路徑)
-        self.current_session_file = None
+        # Initialize SQLite database
+        self.db = Database()
+        
+        # Current session ID
+        self.current_session_id = None
 
         # Transcriber
         self.recorder = AudioToTextRecorder(
@@ -104,63 +225,128 @@ class MainWindow(QMainWindow):
         self.ui.recordButton.setText("Start Recording")
         self.ui.uploadButton.clicked.connect(self.open_and_transcribe)
 
-        self.ui.chatContent.setWordWrap(True)
+        # Add context menu for the chat list
+        self.ui.chatList.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.chatList.customContextMenuRequested.connect(self.show_chat_context_menu)
 
-        # 確保 transcript 資料夾存在
-        self.transcript_dir = 'transcripts'
-        os.makedirs(self.transcript_dir, exist_ok=True)
+        self.ui.chatContent.setWordWrap(True)
 
         # 左側清單：點選時載入對應的 transcript
         self.ui.chatList.itemClicked.connect(self.load_transcript)
         self.load_session_list()
 
+    def show_chat_context_menu(self, position):
+        from PySide6.QtWidgets import QMenu, QAction
+        
+        if not self.ui.chatList.currentItem():
+            return
+            
+        menu = QMenu()
+        rename_action = QAction("Rename", self)
+        delete_action = QAction("Delete", self)
+        
+        rename_action.triggered.connect(self.rename_current_session)
+        delete_action.triggered.connect(self.delete_current_session)
+        
+        menu.addAction(rename_action)
+        menu.addAction(delete_action)
+        
+        menu.exec_(self.ui.chatList.mapToGlobal(position))
+
+    def rename_current_session(self):
+        if not self.ui.chatList.currentItem():
+            return
+            
+        current_name = self.ui.chatList.currentItem().text()
+        session_id = self.db.get_session_id_by_name(current_name)
+        
+        if not session_id:
+            return
+            
+        new_name, ok = QInputDialog.getText(
+            self, "Rename Chat", "Enter new name:", text=current_name)
+            
+        if ok and new_name.strip() and new_name != current_name:
+            success = self.db.rename_session(session_id, new_name)
+            if success:
+                self.load_session_list()
+                # Select the renamed session
+                items = self.ui.chatList.findItems(new_name, Qt.MatchExactly)
+                if items:
+                    self.ui.chatList.setCurrentItem(items[0])
+            else:
+                QMessageBox.warning(self, "Rename Failed", "A session with that name already exists.")
+
+    def delete_current_session(self):
+        if not self.ui.chatList.currentItem():
+            return
+            
+        current_name = self.ui.chatList.currentItem().text()
+        session_id = self.db.get_session_id_by_name(current_name)
+        
+        if not session_id:
+            return
+            
+        confirm = QMessageBox.question(
+            self, "Delete Chat", 
+            f"Are you sure you want to delete '{current_name}'?",
+            QMessageBox.Yes | QMessageBox.No, 
+            QMessageBox.No
+        )
+        
+        if confirm == QMessageBox.Yes:
+            self.db.delete_session(session_id)
+            self.ui.chatContent.clear()
+            self.current_session_id = None
+            self.load_session_list()
+
     def new_chat(self):
-        # 1) 取得新的 session 名稱
+        # Get a new session name
         name, ok = QInputDialog.getText(self, "New Chat", "Enter chat name:")
         if not ok or not name.strip():
             return
-        base = name.strip()
-        filename = f"{base}.txt"
-        filepath = os.path.join(self.transcript_dir, filename)
-        counter = 1
-        # 處理重名
-        while os.path.exists(filepath):
-            filename = f"{base}({counter}).txt"
-            filepath = os.path.join(self.transcript_dir, filename)
-            counter += 1
-        # 建立空檔案
-        with open(filepath, 'w', encoding='utf-8'):
-            pass
-        # 重新載入清單並切換到新 session
+            
+        # Create new session in database
+        session_id = self.db.create_session(name.strip())
+        if not session_id:
+            # Handle duplicate name
+            QMessageBox.warning(self, "Error", "A chat with that name already exists.")
+            return
+            
+        # Reload the session list and switch to the new session
         self.load_session_list()
-        items = self.ui.chatList.findItems(
-            os.path.splitext(filename)[0], Qt.MatchExactly)
+        items = self.ui.chatList.findItems(name.strip(), Qt.MatchExactly)
         if items:
             self.ui.chatList.setCurrentItem(items[0])
             self.load_transcript(items[0])
 
     def load_session_list(self):
-        """掃描 transcript_dir，把檔名（去掉 .txt）加入清單"""
+        """Load all sessions from the database into the list widget"""
         self.ui.chatList.clear()
-        for fn in sorted(os.listdir(self.transcript_dir)):
-            if fn.lower().endswith('.txt'):
-                name = fn[:-4]
-                self.ui.chatList.addItem(name)
+        sessions = self.db.get_all_sessions()
+        for session in sessions:
+            self.ui.chatList.addItem(session['name'])
 
     def load_transcript(self, item):
-        """載入指定 session，同時設定 current_session_file"""
+        """Load the transcripts for the selected session"""
         session_name = item.text()
-        self.current_session_file = os.path.join(
-            self.transcript_dir, f"{session_name}.txt")
+        session_id = self.db.get_session_id_by_name(session_name)
+        
+        if not session_id:
+            return
+            
+        self.current_session_id = session_id
         self.ui.chatContent.clear()
-        with open(self.current_session_file, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    self.ui.chatContent.addItem(line)
+        
+        transcripts = self.db.get_transcripts_by_session_id(session_id)
+        for transcript in transcripts:
+            self.ui.chatContent.addItem(transcript['text'])
 
     def toggle_recording(self):
         if not self.is_recording:
+            if not self.current_session_id:
+                QMessageBox.warning(self, "No Chat Selected", "Please create or select a chat first.")
+                return
             self.start_recording()
         else:
             self.stop_recording()
@@ -198,23 +384,25 @@ class MainWindow(QMainWindow):
 
     @Slot(str)
     def on_realtime_transcription_stabilized(self, s):
+        if not self.current_session_id:
+            return
+            
         with self.chat_lock:
-            # 移除暫存
+            # Remove temporary item
             if (
                 self.ui.chatContent.count() > 0 and
                 self.ui.chatContent.item(
                     self.ui.chatContent.count() - 1).data(Qt.UserRole) == 'temp'
             ):
                 self.ui.chatContent.takeItem(self.ui.chatContent.count() - 1)
-            # 加入最終文字
+                
+            # Add final text to UI
             item = QListWidgetItem(s)
             self.ui.chatContent.addItem(item)
             self.ui.chatContent.scrollToBottom()
 
-            # 寫入目前 session 檔案
-            if self.current_session_file:
-                with open(self.current_session_file, 'a', encoding='utf-8') as f:
-                    f.write(s + '\n')
+            # Save transcript to database
+            self.db.add_transcript(self.current_session_id, s)
 
     def start_recording(self):
         self.recorder.start()
@@ -246,10 +434,14 @@ class MainWindow(QMainWindow):
         self.ui.recordButton.setText("Start Recording")
 
     def open_and_transcribe(self):
-        # 打開檔案對話框，只顯示 .wav
+        if not self.current_session_id:
+            QMessageBox.warning(self, "No Chat Selected", "Please create or select a chat first.")
+            return
+            
+        # Open file dialog to select a .wav file
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "選擇 WAV 檔",
+            "Select WAV File",
             "",
             "WAV Files (*.wav)"
         )
@@ -275,12 +467,17 @@ class MainWindow(QMainWindow):
 
     @Slot(str)
     def on_file_transcription_completed(self, text):
+        if not self.current_session_id:
+            return
+            
         sentences = re.split(r'(?<=[。！？\.\!?])\s*', text)
 
         for sent in sentences:
             sent = sent.strip()
             if sent:
                 self.ui.chatContent.addItem(sent)
+                # Save each sentence to database
+                self.db.add_transcript(self.current_session_id, sent)
 
         self.ui.statusbar.showMessage("Transcription completed.", 2000)
 
