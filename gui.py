@@ -1,6 +1,10 @@
 import sys
 import threading
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QListWidgetItem
+from transcribe import transcribe_file
+import re
+import os
+
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QFileDialog, QListWidgetItem
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QFile, QObject, QThread, QObject, QThread, Signal, Slot, Qt, QTimer, QMetaObject
 from RealtimeSTT import AudioToTextRecorder
@@ -67,6 +71,17 @@ class MainWindow(QMainWindow):
 
         self.ui.recordButton.clicked.connect(self.toggle_recording)
         self.ui.recordButton.setText("Start Recording")
+
+        self.ui.uploadButton.clicked.connect(self.open_and_transcribe)
+
+        # 確保 transcript 資料夾存在
+        self.transcript_dir = 'transcripts'
+        os.makedirs(self.transcript_dir, exist_ok=True)
+
+        # 左側清單：點選時載入對應的 transcript
+        self.ui.chatList.itemClicked.connect(self.load_transcript)
+        self.load_session_list()
+
 
     def toggle_recording(self):
         if not self.is_recording:
@@ -140,6 +155,67 @@ class MainWindow(QMainWindow):
 
         self.is_recording = False
         self.ui.recordButton.setText("Start Recording")
+
+    def open_and_transcribe(self):
+        # 打開檔案對話框，只顯示 .wav
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "選擇 WAV 檔",
+            "",
+            "WAV Files (*.wav)"
+        )
+        if not file_path:
+            return
+
+        threading.Thread(target=self._do_transcribe_file, args=(file_path,), daemon=True).start()
+
+    def _do_transcribe_file(self, wav_path: str):
+        # 1) 呼叫 transcribe，拿到完整文字
+        text = transcribe_file(wav_path, model_path='mlx-community/whisper-small-mlx')
+
+        # 2) 用正則依標點切句
+        sentences = re.split(r'(?<=[。！？\.\!?])\s*', text)
+
+        # 3) 清空並逐句加入右側清單
+        self.ui.chatContent.clear()
+        for sent in sentences:
+            sent = sent.strip()
+            if sent:
+                self.ui.chatContent.addItem(sent)
+
+        # 4) 產生唯一檔名：base.txt, base(1).txt, base(2).txt ...
+        base = os.path.splitext(os.path.basename(wav_path))[0]
+        filename = f"{base}.txt"
+        counter = 1
+        while os.path.exists(os.path.join(self.transcript_dir, filename)):
+            filename = f"{base}({counter}).txt"
+            counter += 1
+        txt_path = os.path.join(self.transcript_dir, filename)
+
+        # 存成文字檔，每行一句
+        with open(txt_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join([s.strip() for s in sentences if s.strip()]))
+
+        # 更新左側清單
+        self.load_session_list()
+
+    def load_session_list(self):
+        """掃描 transcript_dir，把檔名（去掉 .txt）加入清單"""
+        self.ui.chatList.clear()
+        for fn in sorted(os.listdir(self.transcript_dir)):
+            if fn.lower().endswith('.txt'):
+                name = fn[:-4]
+                self.ui.chatList.addItem(name)
+
+    def load_transcript(self, item):
+        txt_file = f"{item.text()}.txt"
+        path = os.path.join(self.transcript_dir, txt_file)
+        self.ui.chatContent.clear()
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    self.ui.chatContent.addItem(line)
 
 
 if __name__ == "__main__":
