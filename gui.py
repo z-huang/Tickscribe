@@ -2,7 +2,7 @@ import sys
 import threading
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QListWidgetItem
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Qt, QFile, QObject, QThread, QObject, QThread, Signal, Slot, Qt
+from PySide6.QtCore import Qt, QFile, QObject, QThread, QObject, QThread, Signal, Slot, Qt, QTimer, QMetaObject
 from RealtimeSTT import AudioToTextRecorder
 
 
@@ -49,20 +49,45 @@ class MainWindow(QMainWindow):
             language='en',
             enable_realtime_transcription=True,
             on_realtime_transcription_update=self.on_realtime_transcription_update,
+            realtime_model_type='base',
             spinner=False
         )
 
         self.chat_lock = threading.Lock()
-
         self.transcribe_thread = None
         self.transcribe_worker = None
+        self.is_recording = False
 
-        self.ui.recordButton.clicked.connect(self.start_recording)
-        # self.ui.stopButton.clicked.connect(self.stop_recording)
+        self.update_buffer = None
+        self.update_timer = QTimer()
+        self.update_timer.setInterval(300)
+        self.update_timer.timeout.connect(self.flush_update_buffer)
+        self.update_timer.setSingleShot(True)
+
+        self.ui.recordButton.clicked.connect(self.toggle_recording)
+        self.ui.recordButton.setText("Start Recording")
+
+    def toggle_recording(self):
+        if not self.is_recording:
+            self.start_recording()
+        else:
+            self.stop_recording()
 
     def on_realtime_transcription_update(self, s):
+        self.update_buffer = s
+        QMetaObject.invokeMethod(
+            self.update_timer, "start", Qt.QueuedConnection)
+
+    @Slot()
+    def flush_update_buffer(self):
+        if self.update_buffer is None:
+            self.update_timer.stop()
+            return
+
         with self.chat_lock:
-            print('Update:', s)
+            s = self.update_buffer
+            self.update_buffer = None
+
             if self.ui.chatContent.count() > 0 and \
                     self.ui.chatContent.item(self.ui.chatContent.count() - 1).data(Qt.UserRole) == 'temp':
                 item = self.ui.chatContent.item(
@@ -74,10 +99,11 @@ class MainWindow(QMainWindow):
                 self.ui.chatContent.addItem(item)
             self.ui.chatContent.scrollToBottom()
 
+        self.update_timer.stop()
+
     @Slot(str)
     def on_realtime_transcription_stabilized(self, s):
         with self.chat_lock:
-            print('Stable:', s)
             if self.ui.chatContent.count() > 0 and \
                     self.ui.chatContent.item(self.ui.chatContent.count() - 1).data(Qt.UserRole) == 'temp':
                 self.ui.chatContent.takeItem(self.ui.chatContent.count() - 1)
@@ -103,10 +129,16 @@ class MainWindow(QMainWindow):
 
         self.transcribe_thread.start()
 
+        self.is_recording = True
+        self.ui.recordButton.setText("Stop Recording")
+
     def stop_recording(self):
         self.recorder.stop()
         if self.transcribe_worker:
             self.transcribe_worker.stop()
+
+        self.is_recording = False
+        self.ui.recordButton.setText("Start Recording")
 
 
 if __name__ == "__main__":
