@@ -56,13 +56,12 @@ def transcribe_thread_func(recorder: LiveRecorder, model_name="mlx-community/whi
                     break
                 continue
 
-            # === Start timing ===
-            start = time.perf_counter()
             prompt = confirmed_text
             if confirmed_text:
                 prompt = after_second_last_sentence(confirmed_text)
 
-            # print(f"[Prompt] {prompt}", flush=True)
+            # === Start timing ===
+            start = time.perf_counter()
             result = mlx_whisper.transcribe(
                 unconfirmed_audio, path_or_hf_repo=model_name, word_timestamps=True, initial_prompt=prompt,
             )
@@ -83,7 +82,7 @@ def transcribe_thread_func(recorder: LiveRecorder, model_name="mlx-community/whi
             if common_words is not None and len(common_words) >= 2:
                 confirmed_text += ' ' + ' '.join(common_words)
                 print(f"[Confirmed] {confirmed_text}", flush=True)
-                cutoff = round((timestamp - 0.2) * 16000)
+                cutoff = round((timestamp - 0.15) * 16000)
                 unconfirmed_audio = unconfirmed_audio[cutoff:]
 
             prev_text = text

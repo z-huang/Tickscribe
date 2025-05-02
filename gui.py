@@ -50,7 +50,8 @@ class MainWindow(QMainWindow):
             enable_realtime_transcription=True,
             on_realtime_transcription_update=self.on_realtime_transcription_update,
             realtime_model_type='base',
-            spinner=False
+            spinner=False,
+            compute_type="float32"
         )
 
         self.chat_lock = threading.Lock()

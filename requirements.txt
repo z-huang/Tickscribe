@@ -4,3 +4,4 @@ mlx-lm
 mlx-whisper
 sounddevice
 soundfile
+silero-vad

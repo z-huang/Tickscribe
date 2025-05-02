@@ -4,7 +4,7 @@ import time
 import queue
 
 class LiveRecorder:
-    def __init__(self, sample_rate=16000, channels=1, block_duration=2.0):
+    def __init__(self, sample_rate=16000, channels=1, block_duration=1.0):
         self.sample_rate = sample_rate
         self.channels = channels
         self.blocksize = int(sample_rate * block_duration)
@@ -19,6 +19,7 @@ class LiveRecorder:
         """
         chunk = np.squeeze(chunk).astype(np.float32)
         rms = np.sqrt(np.mean(chunk ** 2))  # Root Mean Square (energy)
+        # print(rms)
         if rms < threshold:
             print('[Debug] Silence', flush=True)
             return True
