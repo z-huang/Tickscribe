@@ -74,6 +74,8 @@ class MainWindow(QMainWindow):
 
         self.ui.uploadButton.clicked.connect(self.open_and_transcribe)
 
+        self.ui.chatContent.setWordWrap(True)
+        
         # 確保 transcript 資料夾存在
         self.transcript_dir = 'transcripts'
         os.makedirs(self.transcript_dir, exist_ok=True)
@@ -81,7 +83,6 @@ class MainWindow(QMainWindow):
         # 左側清單：點選時載入對應的 transcript
         self.ui.chatList.itemClicked.connect(self.load_transcript)
         self.load_session_list()
-
 
     def toggle_recording(self):
         if not self.is_recording:
@@ -167,11 +168,13 @@ class MainWindow(QMainWindow):
         if not file_path:
             return
 
-        threading.Thread(target=self._do_transcribe_file, args=(file_path,), daemon=True).start()
+        threading.Thread(target=self._do_transcribe_file,
+                         args=(file_path,), daemon=True).start()
 
     def _do_transcribe_file(self, wav_path: str):
         # 1) 呼叫 transcribe，拿到完整文字
-        text = transcribe_file(wav_path, model_path='mlx-community/whisper-small-mlx')
+        text = transcribe_file(
+            wav_path, model_path='mlx-community/whisper-small-mlx')
 
         # 2) 用正則依標點切句
         sentences = re.split(r'(?<=[。！？\.\!?])\s*', text)
