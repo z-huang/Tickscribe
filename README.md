@@ -2,8 +2,7 @@
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/z-huang/Tickscribe/commits/main)
 [![Python Version](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
-
+[![License](https://img.shields.io/badge/License-GPL-yellow.svg)](https://www.gnu.org/licenses/gpl-3.0)
 Tickscribe is a nimble and efficient tool for real-time audio transcription, capable of providing immediate text output from your microphone. It goes a step further by offering optional Language Model (LLM) summarization, making it ideal for capturing meeting notes, lectures, and voice memos quickly and effectively.
 
 ## ✨ Key Features:
