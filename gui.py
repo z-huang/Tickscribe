@@ -441,9 +441,9 @@ class MainWindow(QMainWindow):
         # Open file dialog to select a .wav file
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Select WAV File",
+            "選擇音訊或影片檔",
             "",
-            "WAV Files (*.wav)"
+            "Media Files (*.wav *.mp3 *.mp4);;Audio (*.wav *.mp3);;Video (*.mp4)"
         )
         if not file_path:
             return
