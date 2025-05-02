@@ -11,11 +11,15 @@ class LiveRecorder:
         self.queue = queue.Queue()
         self.running = False
 
-    def is_silent(self, chunk, threshold=0.01):
+        # 自動閾值參數
+        self.noise_level = init_threshold     # 背景噪音能量估計
+        self.sensitivity = sensitivity        # 靜音判定乘數
+        self.adapt_rate = adapt_rate          # EMA 更新速率
+        self.min_threshold = min_threshold    # 閾值下限，避免變得過低
+
+    def is_silent(self, chunk: np.ndarray) -> bool:
         """
-        Returns True if the audio chunk is considered silent.
-        :param chunk: np.ndarray audio data, shape = (n, 1)
-        :param threshold: float - RMS energy threshold for silence
+        用動態閾值判斷靜音，並在靜音時更新背景噪音估計
         """
         chunk = np.squeeze(chunk).astype(np.float32)
         rms = np.sqrt(np.mean(chunk ** 2))  # Root Mean Square (energy)
@@ -30,6 +34,7 @@ class LiveRecorder:
     def _callback(self, indata, frames, time_info, status):
         if self.running:
             if not self.is_silent(indata):
+                # 非靜音才推進 queue
                 self.queue.put(indata.copy())
 
     def start(self):
