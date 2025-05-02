@@ -49,6 +49,24 @@ class TranscriptionWorker(QObject):
         self._running = False
 
 
+class FileTranscriptionWorker(QObject):
+    transcription_completed = Signal(str)
+    finished = Signal()
+
+    def __init__(self, file_path):
+        super().__init__()
+        self.file_path = file_path
+
+    @Slot()
+    def run(self):
+        text = transcribe_file(
+            self.file_path,
+            model_path='mlx-community/whisper-small-mlx'
+        )
+        self.transcription_completed.emit(text)
+        self.finished.emit()
+
+
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -238,45 +256,33 @@ class MainWindow(QMainWindow):
         if not file_path:
             return
 
-        threading.Thread(target=self._do_transcribe_file,
-                         args=(file_path,), daemon=True).start()
+        self.ui.statusbar.showMessage("Transcription in progress...")
 
-    def _do_transcribe_file(self, wav_path: str):
-        # 1) 呼叫 transcribe，拿到完整文字
-        text = transcribe_file(
-            wav_path, model_path='mlx-community/whisper-small-mlx')
+        self.transcribe_thread = QThread()
+        self.transcribe_worker = FileTranscriptionWorker(file_path)
 
-        # 2) 用正則依標點切句
+        self.transcribe_worker.moveToThread(self.transcribe_thread)
+        self.transcribe_worker.transcription_completed.connect(
+            self.on_file_transcription_completed)
+        self.transcribe_thread.started.connect(self.transcribe_worker.run)
+        self.transcribe_worker.finished.connect(self.transcribe_thread.quit)
+        self.transcribe_worker.finished.connect(
+            self.transcribe_worker.deleteLater)
+        self.transcribe_thread.finished.connect(
+            self.transcribe_thread.deleteLater)
+
+        self.transcribe_thread.start()
+
+    @Slot(str)
+    def on_file_transcription_completed(self, text):
         sentences = re.split(r'(?<=[。！？\.\!?])\s*', text)
 
-        # 3) 如果還沒選 session，直接跳過
-        if not self.current_session_file:
-            return
-
-        # 5) 直接以「附加」模式把每句寫到目前的 session .txt 檔裡
-        with open(self.current_session_file, 'a', encoding='utf-8') as f:
-            for sent in sentences:
-                sent = sent.strip()
-                if sent:
-                    f.write(sent + '\n')
-
-        # 6) 再把這些句子加到畫面上
         for sent in sentences:
             sent = sent.strip()
             if sent:
                 self.ui.chatContent.addItem(sent)
 
-    def load_transcript(self, item):
-        # 同上（因為 Python 允許多次定義同名方法，保證取最新定義）
-        session_name = item.text()
-        self.current_session_file = os.path.join(
-            self.transcript_dir, f"{session_name}.txt")
-        self.ui.chatContent.clear()
-        with open(self.current_session_file, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    self.ui.chatContent.addItem(line)
+        self.ui.statusbar.showMessage("Transcription completed.", 2000)
 
 
 if __name__ == "__main__":
