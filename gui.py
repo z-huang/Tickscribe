@@ -65,7 +65,8 @@ class MainWindow(QMainWindow):
             on_realtime_transcription_update=self.on_realtime_transcription_update,
             realtime_model_type='base',
             spinner=False,
-            compute_type="float32"
+            compute_type="float32",
+            no_log_file=True,
         )
 
         self.chat_lock = threading.Lock()
@@ -86,7 +87,7 @@ class MainWindow(QMainWindow):
         self.ui.uploadButton.clicked.connect(self.open_and_transcribe)
 
         self.ui.chatContent.setWordWrap(True)
-        
+
         # 確保 transcript 資料夾存在
         self.transcript_dir = 'transcripts'
         os.makedirs(self.transcript_dir, exist_ok=True)
@@ -114,7 +115,8 @@ class MainWindow(QMainWindow):
             pass
         # 重新載入清單並切換到新 session
         self.load_session_list()
-        items = self.ui.chatList.findItems(os.path.splitext(filename)[0], Qt.MatchExactly)
+        items = self.ui.chatList.findItems(
+            os.path.splitext(filename)[0], Qt.MatchExactly)
         if items:
             self.ui.chatList.setCurrentItem(items[0])
             self.load_transcript(items[0])
@@ -130,7 +132,8 @@ class MainWindow(QMainWindow):
     def load_transcript(self, item):
         """載入指定 session，同時設定 current_session_file"""
         session_name = item.text()
-        self.current_session_file = os.path.join(self.transcript_dir, f"{session_name}.txt")
+        self.current_session_file = os.path.join(
+            self.transcript_dir, f"{session_name}.txt")
         self.ui.chatContent.clear()
         with open(self.current_session_file, 'r', encoding='utf-8') as f:
             for line in f:
@@ -161,9 +164,11 @@ class MainWindow(QMainWindow):
 
             if (
                 self.ui.chatContent.count() > 0 and
-                self.ui.chatContent.item(self.ui.chatContent.count() - 1).data(Qt.UserRole) == 'temp'
+                self.ui.chatContent.item(
+                    self.ui.chatContent.count() - 1).data(Qt.UserRole) == 'temp'
             ):
-                item = self.ui.chatContent.item(self.ui.chatContent.count() - 1)
+                item = self.ui.chatContent.item(
+                    self.ui.chatContent.count() - 1)
                 item.setText(s)
             else:
                 item = QListWidgetItem(s)
@@ -179,7 +184,8 @@ class MainWindow(QMainWindow):
             # 移除暫存
             if (
                 self.ui.chatContent.count() > 0 and
-                self.ui.chatContent.item(self.ui.chatContent.count() - 1).data(Qt.UserRole) == 'temp'
+                self.ui.chatContent.item(
+                    self.ui.chatContent.count() - 1).data(Qt.UserRole) == 'temp'
             ):
                 self.ui.chatContent.takeItem(self.ui.chatContent.count() - 1)
             # 加入最終文字
@@ -199,11 +205,14 @@ class MainWindow(QMainWindow):
         self.transcribe_worker = TranscriptionWorker(self.recorder)
 
         self.transcribe_worker.moveToThread(self.transcribe_thread)
-        self.transcribe_worker.stabilized.connect(self.on_realtime_transcription_stabilized)
+        self.transcribe_worker.stabilized.connect(
+            self.on_realtime_transcription_stabilized)
         self.transcribe_thread.started.connect(self.transcribe_worker.run)
         self.transcribe_worker.finished.connect(self.transcribe_thread.quit)
-        self.transcribe_worker.finished.connect(self.transcribe_worker.deleteLater)
-        self.transcribe_thread.finished.connect(self.transcribe_thread.deleteLater)
+        self.transcribe_worker.finished.connect(
+            self.transcribe_worker.deleteLater)
+        self.transcribe_thread.finished.connect(
+            self.transcribe_thread.deleteLater)
 
         self.transcribe_thread.start()
 
@@ -244,7 +253,6 @@ class MainWindow(QMainWindow):
         if not self.current_session_file:
             return
 
-
         # 5) 直接以「附加」模式把每句寫到目前的 session .txt 檔裡
         with open(self.current_session_file, 'a', encoding='utf-8') as f:
             for sent in sentences:
@@ -258,11 +266,11 @@ class MainWindow(QMainWindow):
             if sent:
                 self.ui.chatContent.addItem(sent)
 
-
     def load_transcript(self, item):
         # 同上（因為 Python 允許多次定義同名方法，保證取最新定義）
         session_name = item.text()
-        self.current_session_file = os.path.join(self.transcript_dir, f"{session_name}.txt")
+        self.current_session_file = os.path.join(
+            self.transcript_dir, f"{session_name}.txt")
         self.ui.chatContent.clear()
         with open(self.current_session_file, 'r', encoding='utf-8') as f:
             for line in f:
