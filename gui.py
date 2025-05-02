@@ -458,7 +458,7 @@ class MainWindow(QMainWindow):
         if not file_path:
             return
 
-        self.ui.statusbar.showMessage("Transcription in progress...")
+        self.statusBar().showMessage("Transcription in progress...")
 
         self.upload_thread = QThread()
         self.upload_worker = FileTranscriptionWorker(file_path)
@@ -487,7 +487,7 @@ class MainWindow(QMainWindow):
                 # Save each sentence to database
                 self.db.add_transcript(self.current_session_id, sent)
 
-        self.ui.statusbar.showMessage("Transcription completed.", 2000)
+        self.statusBar().showMessage("Transcription completed.", 2000)
 
     def closeEvent(self, event):
         print('close')
