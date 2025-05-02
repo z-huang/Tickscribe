@@ -65,4 +65,4 @@ We welcome contributions from the community! If you have ideas for improvements,
 
 ## 📜 License:
 
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT). See the `LICENSE` file for more details. *(Ensure you have a LICENSE file in your repository.)*
+This project is licensed under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.html). See the `LICENSE` file for more details.
