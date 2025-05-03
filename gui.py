@@ -1,21 +1,20 @@
 import sys
 import threading
+from database import Database
 from utils import transcribe_file
 import re
-import os
-import sqlite3
-from datetime import datetime
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QFileDialog, QListWidgetItem, QInputDialog,
-    QMessageBox
+    QMessageBox, QMenu
 )
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import (
     Qt, QFile, QObject, QThread,
     Signal, Slot, QTimer, QMetaObject
 )
+from PySide6.QtGui import QAction
 from RealtimeSTT import AudioToTextRecorder
 
 
@@ -29,123 +28,6 @@ def load_ui_widget(path: str, parent: QWidget = None) -> QWidget:
     if widget is None:
         raise RuntimeError(f"Failed to load UI from: {path}")
     return widget
-
-
-class Database:
-    def __init__(self, db_path='transcripts.db'):
-        self.db_path = db_path
-        self.init_db()
-
-    def get_connection(self):
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
-
-    def init_db(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-
-        # Create sessions table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS sessions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        ''')
-
-        # Create transcripts table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS transcripts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id INTEGER NOT NULL,
-            text TEXT NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE
-        )
-        ''')
-
-        conn.commit()
-        conn.close()
-
-    def get_all_sessions(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            'SELECT id, name, created_at FROM sessions ORDER BY created_at DESC')
-        sessions = cursor.fetchall()
-        conn.close()
-        return sessions
-
-    def create_session(self, name):
-        try:
-            conn = self.get_connection()
-            cursor = conn.cursor()
-            cursor.execute('INSERT INTO sessions (name) VALUES (?)', (name,))
-            session_id = cursor.lastrowid
-            conn.commit()
-            conn.close()
-            return session_id
-        except sqlite3.IntegrityError:
-            # Handle duplicate session name
-            return None
-
-    def get_session_id_by_name(self, name):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT id FROM sessions WHERE name = ?', (name,))
-        result = cursor.fetchone()
-        conn.close()
-        return result['id'] if result else None
-
-    def get_session_name_by_id(self, session_id):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT name FROM sessions WHERE id = ?', (session_id,))
-        result = cursor.fetchone()
-        conn.close()
-        return result['name'] if result else None
-
-    def add_transcript(self, session_id, text):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            'INSERT INTO transcripts (session_id, text) VALUES (?, ?)',
-            (session_id, text)
-        )
-        conn.commit()
-        conn.close()
-
-    def get_transcripts_by_session_id(self, session_id):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            'SELECT id, text, timestamp FROM transcripts WHERE session_id = ? ORDER BY timestamp',
-            (session_id,)
-        )
-        transcripts = cursor.fetchall()
-        conn.close()
-        return transcripts
-
-    def delete_session(self, session_id):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM sessions WHERE id = ?', (session_id,))
-        conn.commit()
-        conn.close()
-
-    def rename_session(self, session_id, new_name):
-        try:
-            conn = self.get_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                'UPDATE sessions SET name = ? WHERE id = ?', (new_name, session_id))
-            conn.commit()
-            conn.close()
-            return True
-        except sqlite3.IntegrityError:
-            # Handle duplicate session name
-            return False
 
 
 class TranscriptionWorker(QObject):
@@ -244,8 +126,6 @@ class MainWindow(QMainWindow):
         self.load_session_list()
 
     def show_chat_context_menu(self, position):
-        from PySide6.QtWidgets import QMenu, QAction
-
         if not self.ui.chatList.currentItem():
             return
 
@@ -453,7 +333,7 @@ class MainWindow(QMainWindow):
         # Open file dialog to select a .wav file
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "選擇音訊或影片檔",
+            "Select Audio or Video File",
             "",
             "Media Files (*.wav *.mp3 *.mp4);;Audio (*.wav *.mp3);;Video (*.mp4)"
         )
