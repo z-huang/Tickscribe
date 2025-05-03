@@ -190,6 +190,8 @@ class FileTranscriptionWorker(QObject):
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWindowTitle("Tickscribe")
+        self.resize(800, 600)
         self.ui = load_ui_widget('ui/mainwindow.ui', self)
         self.setCentralWidget(self.ui)
 
@@ -490,7 +492,6 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Transcription completed.", 2000)
 
     def closeEvent(self, event):
-        print('close')
         self.stop_recording()
         self.recorder.shutdown()
 
@@ -500,7 +501,6 @@ class MainWindow(QMainWindow):
             self.transcribe_thread.wait()
 
         if self.upload_thread and self.upload_thread.isRunning():
-            self.upload_worker.stop()
             self.upload_thread.quit()
             self.upload_thread.wait()
 
@@ -511,7 +511,6 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.aboutToQuit.connect(lambda: print("App is quitting"))
     widget = MainWindow()
     widget.show()
     sys.exit(app.exec())
