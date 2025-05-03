@@ -1,72 +1,17 @@
+import re
 import sys
 import threading
-from database import Database
-from utils import transcribe_file
-import re
 
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget,
-    QFileDialog, QListWidgetItem, QInputDialog,
-    QMessageBox, QMenu
-)
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import (
-    Qt, QFile, QObject, QThread,
-    Signal, Slot, QTimer, QMetaObject
-)
+from PySide6.QtCore import QMetaObject, Qt, QThread, QTimer, Slot
 from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (QApplication, QFileDialog, QInputDialog,
+                               QListWidgetItem, QMainWindow, QMenu,
+                               QMessageBox)
 from RealtimeSTT import AudioToTextRecorder
 
-
-def load_ui_widget(path: str, parent: QWidget = None) -> QWidget:
-    loader = QUiLoader()
-    ui_file = QFile(path)
-    if not ui_file.open(QFile.ReadOnly):
-        raise FileNotFoundError(f"Cannot open UI file: {path}")
-    widget = loader.load(ui_file, parent)
-    ui_file.close()
-    if widget is None:
-        raise RuntimeError(f"Failed to load UI from: {path}")
-    return widget
-
-
-class TranscriptionWorker(QObject):
-    stabilized = Signal(str)
-    finished = Signal()
-
-    def __init__(self, recorder):
-        super().__init__()
-        self.recorder = recorder
-        self._running = True
-
-    @Slot()
-    def run(self):
-        while self._running and not self.recorder.is_shut_down:
-            s = self.recorder.text()
-            if s:
-                self.stabilized.emit(s)
-        self.finished.emit()
-
-    def stop(self):
-        self._running = False
-
-
-class FileTranscriptionWorker(QObject):
-    transcription_completed = Signal(str)
-    finished = Signal()
-
-    def __init__(self, file_path):
-        super().__init__()
-        self.file_path = file_path
-
-    @Slot()
-    def run(self):
-        text = transcribe_file(
-            self.file_path,
-            model_path='mlx-community/whisper-small-mlx'
-        )
-        self.transcription_completed.emit(text)
-        self.finished.emit()
+from database import Database
+from utils import load_ui_widget
+from worker import FileTranscriptionWorker, TranscriptionWorker
 
 
 class MainWindow(QMainWindow):
@@ -74,7 +19,7 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.setWindowTitle("Tickscribe")
         self.resize(800, 600)
-        self.ui = load_ui_widget('ui/mainwindow.ui', self)
+        self.ui = load_ui_widget("ui/mainwindow.ui", self)
         self.setCentralWidget(self.ui)
 
         # Initialize SQLite database
@@ -85,11 +30,11 @@ class MainWindow(QMainWindow):
 
         # Transcriber
         self.recorder = AudioToTextRecorder(
-            model='base',
-            language='en',
+            model="base",
+            language="en",
             enable_realtime_transcription=True,
             on_realtime_transcription_update=self.on_realtime_transcription_update,
-            realtime_model_type='base',
+            realtime_model_type="base",
             spinner=False,
             compute_type="float32",
             no_log_file=True,
@@ -152,7 +97,8 @@ class MainWindow(QMainWindow):
             return
 
         new_name, ok = QInputDialog.getText(
-            self, "Rename Chat", "Enter new name:", text=current_name)
+            self, "Rename Chat", "Enter new name:", text=current_name
+        )
 
         if ok and new_name.strip() and new_name != current_name:
             success = self.db.rename_session(session_id, new_name)
@@ -163,8 +109,9 @@ class MainWindow(QMainWindow):
                 if items:
                     self.ui.chatList.setCurrentItem(items[0])
             else:
-                QMessageBox.warning(self, "Rename Failed",
-                                    "A session with that name already exists.")
+                QMessageBox.warning(
+                    self, "Rename Failed", "A session with that name already exists."
+                )
 
     def delete_current_session(self):
         if not self.ui.chatList.currentItem():
@@ -177,10 +124,11 @@ class MainWindow(QMainWindow):
             return
 
         confirm = QMessageBox.question(
-            self, "Delete Chat",
+            self,
+            "Delete Chat",
             f"Are you sure you want to delete '{current_name}'?",
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.No,
         )
 
         if confirm == QMessageBox.Yes:
@@ -215,7 +163,7 @@ class MainWindow(QMainWindow):
         self.ui.chatList.clear()
         sessions = self.db.get_all_sessions()
         for session in sessions:
-            self.ui.chatList.addItem(session['name'])
+            self.ui.chatList.addItem(session["name"])
 
     def load_transcript(self, item):
         """Load the transcripts for the selected session"""
@@ -230,13 +178,14 @@ class MainWindow(QMainWindow):
 
         transcripts = self.db.get_transcripts_by_session_id(session_id)
         for transcript in transcripts:
-            self.ui.chatContent.addItem(transcript['text'])
+            self.ui.chatContent.addItem(transcript["text"])
 
     def toggle_recording(self):
         if not self.is_recording:
             if not self.current_session_id:
-                QMessageBox.warning(self, "No Chat Selected",
-                                    "Please create or select a chat first.")
+                QMessageBox.warning(
+                    self, "No Chat Selected", "Please create or select a chat first."
+                )
                 return
             self.start_recording()
         else:
@@ -258,16 +207,18 @@ class MainWindow(QMainWindow):
             self.update_buffer = None
 
             if (
-                self.ui.chatContent.count() > 0 and
-                self.ui.chatContent.item(
-                    self.ui.chatContent.count() - 1).data(Qt.UserRole) == 'temp'
+                self.ui.chatContent.count() > 0
+                and self.ui.chatContent.item(self.ui.chatContent.count() - 1).data(
+                    Qt.UserRole
+                )
+                == "temp"
             ):
                 item = self.ui.chatContent.item(
                     self.ui.chatContent.count() - 1)
                 item.setText(s)
             else:
                 item = QListWidgetItem(s)
-                item.setData(Qt.UserRole, 'temp')
+                item.setData(Qt.UserRole, "temp")
                 self.ui.chatContent.addItem(item)
             self.ui.chatContent.scrollToBottom()
 
@@ -281,9 +232,11 @@ class MainWindow(QMainWindow):
         with self.chat_lock:
             # Remove temporary item
             if (
-                self.ui.chatContent.count() > 0 and
-                self.ui.chatContent.item(
-                    self.ui.chatContent.count() - 1).data(Qt.UserRole) == 'temp'
+                self.ui.chatContent.count() > 0
+                and self.ui.chatContent.item(self.ui.chatContent.count() - 1).data(
+                    Qt.UserRole
+                )
+                == "temp"
             ):
                 self.ui.chatContent.takeItem(self.ui.chatContent.count() - 1)
 
@@ -303,7 +256,8 @@ class MainWindow(QMainWindow):
 
         self.transcribe_worker.moveToThread(self.transcribe_thread)
         self.transcribe_worker.stabilized.connect(
-            self.on_realtime_transcription_stabilized)
+            self.on_realtime_transcription_stabilized
+        )
         self.transcribe_thread.started.connect(self.transcribe_worker.run)
         self.transcribe_worker.finished.connect(self.transcribe_thread.quit)
         self.transcribe_worker.finished.connect(
@@ -326,8 +280,9 @@ class MainWindow(QMainWindow):
 
     def open_and_transcribe(self):
         if not self.current_session_id:
-            QMessageBox.warning(self, "No Chat Selected",
-                                "Please create or select a chat first.")
+            QMessageBox.warning(
+                self, "No Chat Selected", "Please create or select a chat first."
+            )
             return
 
         # Open file dialog to select a .wav file
@@ -335,7 +290,7 @@ class MainWindow(QMainWindow):
             self,
             "Select Audio or Video File",
             "",
-            "Media Files (*.wav *.mp3 *.mp4);;Audio (*.wav *.mp3);;Video (*.mp4)"
+            "Media Files (*.wav *.mp3 *.mp4);;Audio (*.wav *.mp3);;Video (*.mp4)",
         )
         if not file_path:
             return
@@ -347,7 +302,8 @@ class MainWindow(QMainWindow):
 
         self.upload_worker.moveToThread(self.upload_thread)
         self.upload_worker.transcription_completed.connect(
-            self.on_file_transcription_completed)
+            self.on_file_transcription_completed
+        )
         self.upload_thread.started.connect(self.upload_worker.run)
         self.upload_worker.finished.connect(self.upload_thread.quit)
         self.upload_worker.finished.connect(self.upload_worker.deleteLater)
@@ -360,7 +316,7 @@ class MainWindow(QMainWindow):
         if not self.current_session_id:
             return
 
-        sentences = re.split(r'(?<=[。！？\.\!?])\s*', text)
+        sentences = re.split(r"(?<=[。！？\.\!?])\s*", text)
 
         for sent in sentences:
             sent = sent.strip()
@@ -374,18 +330,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         self.stop_recording()
         self.recorder.shutdown()
-
-        if self.transcribe_thread and self.transcribe_thread.isRunning():
-            self.transcribe_worker.stop()
-            self.transcribe_thread.quit()
-            self.transcribe_thread.wait()
-
-        if self.upload_thread and self.upload_thread.isRunning():
-            self.upload_thread.quit()
-            self.upload_thread.wait()
-
         self.update_timer.stop()
-
         event.accept()
 
 

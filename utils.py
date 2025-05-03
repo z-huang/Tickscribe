@@ -1,15 +1,34 @@
-import mlx_whisper
 import time
-from mlx_lm import load, stream_generate
 
-def transcribe_file(file_path, model_path="mlx-community/whisper-small-mlx", verbose=False):
+import mlx_whisper
+from mlx_lm import load, stream_generate
+from PySide6.QtCore import QFile
+from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWidgets import QWidget
+
+
+def load_ui_widget(path: str, parent: QWidget = None) -> QWidget:
+    loader = QUiLoader()
+    ui_file = QFile(path)
+    if not ui_file.open(QFile.ReadOnly):
+        raise FileNotFoundError(f"Cannot open UI file: {path}")
+    widget = loader.load(ui_file, parent)
+    ui_file.close()
+    if widget is None:
+        raise RuntimeError(f"Failed to load UI from: {path}")
+    return widget
+
+
+def transcribe_file(
+    file_path, model_path="mlx-community/whisper-small-mlx", verbose=False
+):
     start = time.perf_counter()
     result = mlx_whisper.transcribe(file_path, path_or_hf_repo=model_path)
     end = time.perf_counter()
     latency_ms = (end - start) * 1000
     if verbose:
         return f"[{latency_ms:.2f} ms] {result['text']}"
-    return result['text']
+    return result["text"]
 
 
 def summarize_text(text, model_path="mlx-community/Llama-3.2-1B-Instruct-4bit"):
@@ -20,7 +39,8 @@ def summarize_text(text, model_path="mlx-community/Llama-3.2-1B-Instruct-4bit"):
     """
     if tokenizer.chat_template is not None:
         messages = [{"role": "user", "content": prompt}]
-        prompt = tokenizer.apply_chat_template(messages, add_generation_prompt=True)
+        prompt = tokenizer.apply_chat_template(
+            messages, add_generation_prompt=True)
 
     for response in stream_generate(model, tokenizer, prompt, max_tokens=2048):
         print(response.text, end="", flush=True)

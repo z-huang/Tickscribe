@@ -2,7 +2,7 @@ from PySide6.QtSql import QSqlDatabase, QSqlQuery
 
 
 class Database:
-    def __init__(self, db_path='transcripts.db'):
+    def __init__(self, db_path="transcripts.db"):
         self.db_path = db_path
         self.db = QSqlDatabase.addDatabase("QSQLITE")
         self.db.setDatabaseName(self.db_path)
@@ -14,17 +14,17 @@ class Database:
         query = QSqlQuery()
 
         query.exec(
-            '''
+            """
             CREATE TABLE IF NOT EXISTS sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-            '''
+            """
         )
 
         query.exec(
-            '''
+            """
             CREATE TABLE IF NOT EXISTS transcripts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_id INTEGER NOT NULL,
@@ -32,19 +32,22 @@ class Database:
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE
             )
-            '''
+            """
         )
 
     def get_all_sessions(self):
         sessions = []
         query = QSqlQuery(
-            "SELECT id, name, created_at FROM sessions ORDER BY created_at DESC")
+            "SELECT id, name, created_at FROM sessions ORDER BY created_at DESC"
+        )
         while query.next():
-            sessions.append({
-                'id': query.value(0),
-                'name': query.value(1),
-                'created_at': query.value(2)
-            })
+            sessions.append(
+                {
+                    "id": query.value(0),
+                    "name": query.value(1),
+                    "created_at": query.value(2),
+                }
+            )
         return sessions
 
     def create_session(self, name):
@@ -88,10 +91,12 @@ class Database:
 
     def add_transcript(self, session_id, text):
         query = QSqlQuery()
-        query.prepare('''
+        query.prepare(
+            """
             INSERT INTO transcripts (session_id, text)
             VALUES (:session_id, :text)
-        ''')
+        """
+        )
         query.bindValue(":session_id", session_id)
         query.bindValue(":text", text)
         query.exec()
@@ -99,17 +104,21 @@ class Database:
     def get_transcripts_by_session_id(self, session_id):
         transcripts = []
         query = QSqlQuery()
-        query.prepare('''
+        query.prepare(
+            """
             SELECT id, text, timestamp FROM transcripts
             WHERE session_id = :session_id
             ORDER BY timestamp
-        ''')
+        """
+        )
         query.bindValue(":session_id", session_id)
         query.exec()
         while query.next():
-            transcripts.append({
-                'id': query.value(0),
-                'text': query.value(1),
-                'timestamp': query.value(2)
-            })
+            transcripts.append(
+                {
+                    "id": query.value(0),
+                    "text": query.value(1),
+                    "timestamp": query.value(2),
+                }
+            )
         return transcripts
