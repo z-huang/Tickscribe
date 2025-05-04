@@ -1,7 +1,6 @@
+import mlx_whisper
 from PySide6.QtCore import QObject, Signal, Slot
 from RealtimeSTT import AudioToTextRecorder
-
-from utils import transcribe_file
 
 
 class TranscriptionWorker(QObject):
@@ -35,9 +34,10 @@ class FileTranscriptionWorker(QObject):
 
     @Slot()
     def run(self):
-        text = transcribe_file(
+        result = mlx_whisper.transcribe(
             self.file_path,
-            model_path="mlx-community/whisper-small-mlx"
+            path_or_hf_repo='mlx-community/whisper-small-mlx'
         )
+        text = result['text']
         self.transcription_completed.emit(text)
         self.finished.emit()

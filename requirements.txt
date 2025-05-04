@@ -1,6 +1,5 @@
 mlx-lm
 mlx-whisper
-# python=3.11
 PySide6
 RealtimeSTT
 sounddevice
