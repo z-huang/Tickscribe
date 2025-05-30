@@ -1,264 +1,408 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWidget</class>
- <widget class="QWidget" name="MainWidget">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>800</width>
-    <height>600</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>MainWidget</string>
-  </property>
-  <property name="styleSheet">
-   <string notr="true">QWidget{
-	background-color:rgb(245, 245, 245)
-}</string>
-  </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
-   <property name="leftMargin">
-    <number>10</number>
-   </property>
-   <property name="topMargin">
-    <number>10</number>
-   </property>
-   <property name="rightMargin">
-    <number>10</number>
-   </property>
-   <property name="bottomMargin">
-    <number>10</number>
-   </property>
-   <item>
-    <widget class="QSplitter" name="splitter">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="handleWidth">
-      <number>6</number>
-     </property>
-     <property name="childrenCollapsible">
-      <bool>true</bool>
-     </property>
-     <widget class="QWidget" name="leftPane" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>1</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>0</height>
-       </size>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayoutLeft">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QListWidget" name="chatList">
-         <property name="font">
-          <font>
-           <family>Gill Sans</family>
-           <pointsize>18</pointsize>
-          </font>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QListView::item{
-	color: black;
-}</string>
-         </property>
-         <property name="lineWidth">
-          <number>0</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="newChatButton">
-         <property name="font">
-          <font>
-           <family>Gill Sans</family>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QPushButton{
-	border-radius:8px;
-	background-color:rgb(255, 255, 255);
-	border: 1px solid rgba(200, 200, 200, 128);
-	color: black;
-}
+    <class>MainWidget</class>
+    <widget class="QWidget" name="MainWidget">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>800</width>
+                <height>600</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>MainWidget</string>
+        </property>
+        <property name="styleSheet">
+            <string notr="true">QWidget{
+                background-color:rgb(245, 245, 245)
+                }</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="leftMargin">
+                <number>10</number>
+            </property>
+            <property name="topMargin">
+                <number>10</number>
+            </property>
+            <property name="rightMargin">
+                <number>10</number>
+            </property>
+            <property name="bottomMargin">
+                <number>10</number>
+            </property>
+            <item>
+                <widget class="QSplitter" name="splitter">
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>0</height>
+                        </size>
+                    </property>
+                    <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="handleWidth">
+                        <number>6</number>
+                    </property>
+                    <property name="childrenCollapsible">
+                        <bool>true</bool>
+                    </property>
+                    <widget class="QWidget" name="leftPane" native="true">
+                        <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                                <horstretch>1</horstretch>
+                                <verstretch>0</verstretch>
+                            </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                            <size>
+                                <width>0</width>
+                                <height>0</height>
+                            </size>
+                        </property>
+                        <layout class="QVBoxLayout" name="verticalLayoutLeft">
+                            <property name="leftMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="topMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="rightMargin">
+                                <number>0</number>
+                            </property>
+                            <property name="bottomMargin">
+                                <number>0</number>
+                            </property>
+                            <item>
+                                <widget class="QListWidget" name="chatList">
+                                    <property name="font">
+                                        <font>
+                                            <family>Gill Sans</family>
+                                            <pointsize>18</pointsize>
+                                        </font>
+                                    </property>
+                                    <property name="styleSheet">
+                                        <string notr="true">QListView::item{
+                                            color: black;
+                                            }</string>
+                                    </property>
+                                    <property name="lineWidth">
+                                        <number>0</number>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="newChatButton">
+                                    <property name="font">
+                                        <font>
+                                            <family>Gill Sans</family>
+                                            <pointsize>14</pointsize>
+                                        </font>
+                                    </property>
+                                    <property name="styleSheet">
+                                        <string notr="true">QPushButton{
+                                            border-radius:8px;
+                                            background-color:rgb(255, 255, 255);
+                                            border: 1px solid rgba(200, 200, 200, 128);
+                                            color: black;
+                                            }
 
-QPushButton:Hover{
-	border-radius:8px;
-	background-color:rgb(250, 250, 250);
-	color: black;
-}
+                                            QPushButton:Hover{
+                                            border-radius:8px;
+                                            background-color:rgb(250, 250, 250);
+                                            color: black;
+                                            }
 
-QPushButton:Pressed{
-	border-radius:8px;
-	background-color: rgba(200, 200, 200, 128);
-	color: black;
-}</string>
-         </property>
-         <property name="text">
-          <string>New</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="rightPane" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>7</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>0</height>
-       </size>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayoutRight">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QListWidget" name="chatContent">
-         <property name="font">
-          <font>
-           <family>Gill Sans</family>
-           <pointsize>18</pointsize>
-          </font>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QListWidget{
-	color: black
-}</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <property name="spacing">
-          <number>-1</number>
-         </property>
-         <item>
-          <widget class="QPushButton" name="uploadButton">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <family>Gill Sans</family>
-             <pointsize>14</pointsize>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QPushButton{
-	border-radius:8px;
-	background-color:rgb(255, 255, 255);
-	border: 1px solid rgba(200, 200, 200, 128);
-	color: black;
-}
+                                            QPushButton:Pressed{
+                                            border-radius:8px;
+                                            background-color: rgba(200, 200, 200, 128);
+                                            color: black;
+                                            }</string>
+                                    </property>
+                                    <property name="text">
+                                        <string>New</string>
+                                    </property>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                    <widget class="QTabWidget" name="rightPane">
+                        <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                                <horstretch>7</horstretch>
+                                <verstretch>0</verstretch>
+                            </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                            <size>
+                                <width>0</width>
+                                <height>0</height>
+                            </size>
+                        </property>
+                        <property name="tabPosition">
+                            <enum>QTabWidget::North</enum>
+                        </property>
+                        <property name="tabShape">
+                            <enum>QTabWidget::Rounded</enum>
+                        </property>
+                        <property name="documentMode">
+                            <bool>false</bool>
+                        </property>
+                        <property name="tabsClosable">
+                            <bool>false</bool>
+                        </property>
+                        <property name="movable">
+                            <bool>false</bool>
+                        </property>
+                        <!-- Transcription Tab -->
+                        <widget class="QWidget" name="tabTranscription">
+                            <attribute name="title">
+                                <string>Transcription</string>
+                            </attribute>
+                            <layout class="QVBoxLayout" name="verticalLayoutRight">
+                                <property name="leftMargin">
+                                    <number>0</number>
+                                </property>
+                                <property name="topMargin">
+                                    <number>0</number>
+                                </property>
+                                <property name="rightMargin">
+                                    <number>0</number>
+                                </property>
+                                <property name="bottomMargin">
+                                    <number>0</number>
+                                </property>
+                                <item>
+                                    <widget class="QListWidget" name="chatContent">
+                                        <property name="font">
+                                            <font>
+                                                <family>Gill Sans</family>
+                                                <pointsize>18</pointsize>
+                                            </font>
+                                        </property>
+                                        <property name="styleSheet">
+                                            <string notr="true">QListWidget{
+                                                color: black
+                                                }</string>
+                                        </property>
+                                    </widget>
+                                </item>
+                                <item>
+                                    <layout class="QHBoxLayout" name="horizontalLayout_2">
+                                        <property name="spacing">
+                                            <number>-1</number>
+                                        </property>
+                                        <item>
+                                            <widget class="QPushButton" name="uploadButton">
+                                                <property name="sizePolicy">
+                                                    <sizepolicy hsizetype="Minimum"
+                                                        vsizetype="Fixed">
+                                                        <horstretch>1</horstretch>
+                                                        <verstretch>0</verstretch>
+                                                    </sizepolicy>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <family>Gill Sans</family>
+                                                        <pointsize>14</pointsize>
+                                                    </font>
+                                                </property>
+                                                <property name="styleSheet">
+                                                    <string notr="true">QPushButton{
+                                                        border-radius:8px;
+                                                        background-color:rgb(255, 255, 255);
+                                                        border: 1px solid rgba(200, 200, 200, 128);
+                                                        color: black;
+                                                        }
 
-QPushButton:Hover{
-	border-radius:8px;
-	background-color:rgb(250, 250, 250);
-	color: black;
-}
+                                                        QPushButton:Hover{
+                                                        border-radius:8px;
+                                                        background-color:rgb(250, 250, 250);
+                                                        color: black;
+                                                        }
 
-QPushButton:Pressed{
-	border-radius:8px;
-	background-color: rgba(200, 200, 200, 128);
-	color: black;
-}</string>
-           </property>
-           <property name="text">
-            <string>Upload</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="recordButton">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <family>Gill Sans</family>
-             <pointsize>14</pointsize>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">QPushButton{
-	border-radius:8px;
-	background-color:rgb(255, 255, 255);
-	border: 1px solid rgba(200, 200, 200, 128);
-	color: black;
-}
+                                                        QPushButton:Pressed{
+                                                        border-radius:8px;
+                                                        background-color: rgba(200, 200, 200, 128);
+                                                        color: black;
+                                                        }</string>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Upload</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QPushButton" name="recordButton">
+                                                <property name="sizePolicy">
+                                                    <sizepolicy hsizetype="Minimum"
+                                                        vsizetype="Fixed">
+                                                        <horstretch>1</horstretch>
+                                                        <verstretch>0</verstretch>
+                                                    </sizepolicy>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <family>Gill Sans</family>
+                                                        <pointsize>14</pointsize>
+                                                    </font>
+                                                </property>
+                                                <property name="styleSheet">
+                                                    <string notr="true">QPushButton{
+                                                        border-radius:8px;
+                                                        background-color:rgb(255, 255, 255);
+                                                        border: 1px solid rgba(200, 200, 200, 128);
+                                                        color: black;
+                                                        }
 
-QPushButton:Hover{
-	border-radius:8px;
-	background-color:rgb(250, 250, 250);
-	color: black;
-}
+                                                        QPushButton:Hover{
+                                                        border-radius:8px;
+                                                        background-color:rgb(250, 250, 250);
+                                                        color: black;
+                                                        }
 
-QPushButton:Pressed{
-	border-radius:8px;
-	background-color: rgba(200, 200, 200, 128);
-	color: black;
-}</string>
-           </property>
-           <property name="text">
-            <string>Record</string>
-           </property>
-          </widget>
-         </item>
+                                                        QPushButton:Pressed{
+                                                        border-radius:8px;
+                                                        background-color: rgba(200, 200, 200, 128);
+                                                        color: black;
+                                                        }</string>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Record</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QPushButton" name="summaryButton">
+                                                <property name="sizePolicy">
+                                                    <sizepolicy hsizetype="Minimum"
+                                                        vsizetype="Fixed">
+                                                        <horstretch>1</horstretch>
+                                                        <verstretch>0</verstretch>
+                                                    </sizepolicy>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <family>Gill Sans</family>
+                                                        <pointsize>14</pointsize>
+                                                    </font>
+                                                </property>
+                                                <property name="styleSheet">
+                                                    <string notr="true">QPushButton{
+                                                        border-radius:8px;
+                                                        background-color:rgb(255, 255, 255);
+                                                        border: 1px solid rgba(200, 200, 200, 128);
+                                                        color: black;
+                                                        }
+
+                                                        QPushButton:Hover{
+                                                        border-radius:8px;
+                                                        background-color:rgb(250, 250, 250);
+                                                        color: black;
+                                                        }
+
+                                                        QPushButton:Pressed{
+                                                        border-radius:8px;
+                                                        background-color: rgba(200, 200, 200, 128);
+                                                        color: black;
+                                                        }</string>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Summarize</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </item>
+                            </layout>
+                        </widget>
+                        <!-- Chat Tab -->
+                        <widget class="QWidget" name="tabChat">
+                            <attribute name="title">
+                                <string>Chat</string>
+                            </attribute>
+                            <layout class="QVBoxLayout" name="verticalLayoutChat">
+                                <property name="leftMargin">
+                                    <number>0</number>
+                                </property>
+                                <property name="topMargin">
+                                    <number>0</number>
+                                </property>
+                                <property name="rightMargin">
+                                    <number>0</number>
+                                </property>
+                                <property name="bottomMargin">
+                                    <number>0</number>
+                                </property>
+                                <item>
+                                    <widget class="QListWidget" name="chatListWidget">
+                                        <property name="font">
+                                            <font>
+                                                <family>Gill Sans</family>
+                                                <pointsize>18</pointsize>
+                                            </font>
+                                        </property>
+                                        <property name="styleSheet">
+                                            <string notr="true">QListWidget{
+                                                color: black
+                                                }</string>
+                                        </property>
+                                    </widget>
+                                </item>
+                                <item>
+                                    <layout class="QHBoxLayout" name="horizontalLayoutChatInput">
+                                        <item>
+                                            <widget class="QLineEdit" name="chatLineEdit">
+                                                <property name="font">
+                                                    <font>
+                                                        <family>Gill Sans</family>
+                                                        <pointsize>14</pointsize>
+                                                    </font>
+                                                </property>
+                                                <property name="placeholderText">
+                                                    <string>Type your message...</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item>
+                                            <widget class="QPushButton" name="sendButton">
+                                                <property name="font">
+                                                    <font>
+                                                        <family>Gill Sans</family>
+                                                        <pointsize>14</pointsize>
+                                                    </font>
+                                                </property>
+                                                <property name="styleSheet">
+                                                    <string notr="true">QPushButton{
+                                                        border-radius:8px;
+                                                        background-color:rgb(255, 255, 255);
+                                                        border: 1px solid rgba(200, 200, 200, 128);
+                                                        color: black;
+                                                        }
+
+                                                        QPushButton:Hover{
+                                                        background-color:rgb(250, 250, 250);
+                                                        }
+
+                                                        QPushButton:Pressed{
+                                                        background-color: rgba(200, 200, 200, 128);
+                                                        }</string>
+                                                </property>
+                                                <property name="text">
+                                                    <string>Send</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </item>
+                            </layout>
+                        </widget>
+                    </widget>
+                </widget>
+            </item>
         </layout>
-       </item>
-      </layout>
-     </widget>
     </widget>
-   </item>
-  </layout>
- </widget>
- <resources/>
- <connections/>
+    <resources />
+    <connections />
 </ui>
