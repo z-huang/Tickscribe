@@ -174,7 +174,7 @@
                                     <number>0</number>
                                 </property>
                                 <item>
-                                    <widget class="QListWidget" name="chatContent">
+                                    <widget class="QListWidget" name="transcribeContent">
                                         <property name="font">
                                             <font>
                                                 <family>Gill Sans</family>
@@ -336,7 +336,7 @@
                                     <number>0</number>
                                 </property>
                                 <item>
-                                    <widget class="QListWidget" name="chatListWidget">
+                                    <widget class="QListWidget" name="llmChatList">
                                         <property name="font">
                                             <font>
                                                 <family>Gill Sans</family>
@@ -374,7 +374,8 @@
                                                     </font>
                                                 </property>
                                                 <property name="styleSheet">
-                                                    <string notr="true">QPushButton{
+                                                    <string notr="true">
+                                                        QPushButton{
                                                         border-radius:8px;
                                                         background-color:rgb(255, 255, 255);
                                                         border: 1px solid rgba(200, 200, 200, 128);
@@ -387,7 +388,14 @@
 
                                                         QPushButton:Pressed{
                                                         background-color: rgba(200, 200, 200, 128);
-                                                        }</string>
+                                                        }
+
+                                                        QPushButton:disabled {
+                                                        background-color: rgb(240, 240, 240);
+                                                        color: rgb(160, 160, 160);
+                                                        border: 1px solid rgba(200, 200, 200, 64);
+                                                        }
+                                                    </string>
                                                 </property>
                                                 <property name="text">
                                                     <string>Send</string>
