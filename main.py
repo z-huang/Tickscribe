@@ -96,9 +96,10 @@ class MainWindow(QMainWindow):
             # Create new session in database
             session_id = self.db.create_session(name.strip())
         except Exception as e:
-            QMessageBox.critical(self, "Database Error", f"Failed to create chat:\n{e}")
+            QMessageBox.critical(self, "Database Error",
+                                 f"Failed to create chat:\n{e}")
             return
-        
+
         if not session_id:
             # Handle duplicate name
             QMessageBox.warning(
@@ -344,7 +345,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def summarize(self):
-        pass
+        self.ui.rightPane.setCurrentWidget(self.ui.tabChat)
+        self.ui.chatLineEdit.setText("Summarize")
+        self.send_message()
 
     def send_message(self):
         if not self.ui.sendButton.isEnabled():
