@@ -92,9 +92,13 @@ class MainWindow(QMainWindow):
         name, ok = QInputDialog.getText(self, "New Chat", "Enter chat name:")
         if not ok or not name.strip():
             return
-
-        # Create new session in database
-        session_id = self.db.create_session(name.strip())
+        try:
+            # Create new session in database
+            session_id = self.db.create_session(name.strip())
+        except Exception as e:
+            QMessageBox.critical(self, "Database Error", f"Failed to create chat:\n{e}")
+            return
+        
         if not session_id:
             # Handle duplicate name
             QMessageBox.warning(
