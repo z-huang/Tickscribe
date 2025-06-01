@@ -74,6 +74,7 @@ class MainWindow(QMainWindow):
         self.llm_messages = []
         self.partial_response = ''
         self.ui.summaryButton.clicked.connect(self.summarize)
+        self.ui.clearChatButton.clicked.connect(self.clear_chat)
         self.ui.sendButton.clicked.connect(self.send_message)
         self.ui.chatLineEdit.returnPressed.connect(self.send_message)
         self.llm_worker_thread = None
@@ -348,6 +349,10 @@ class MainWindow(QMainWindow):
         self.ui.rightPane.setCurrentWidget(self.ui.tabChat)
         self.ui.chatLineEdit.setText("Summarize")
         self.send_message()
+
+    def clear_chat(self):
+        self.llm_messages.clear()
+        self.ui.llmChatList.clear()
 
     def send_message(self):
         if not self.ui.sendButton.isEnabled():

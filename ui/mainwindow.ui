@@ -40,7 +40,7 @@
                         </size>
                     </property>
                     <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
+                        <enum>Qt::Orientation::Horizontal</enum>
                     </property>
                     <property name="handleWidth">
                         <number>6</number>
@@ -141,10 +141,13 @@
                             </size>
                         </property>
                         <property name="tabPosition">
-                            <enum>QTabWidget::North</enum>
+                            <enum>QTabWidget::TabPosition::North</enum>
                         </property>
                         <property name="tabShape">
-                            <enum>QTabWidget::Rounded</enum>
+                            <enum>QTabWidget::TabShape::Rounded</enum>
+                        </property>
+                        <property name="currentIndex">
+                            <number>1</number>
                         </property>
                         <property name="documentMode">
                             <bool>false</bool>
@@ -155,7 +158,6 @@
                         <property name="movable">
                             <bool>false</bool>
                         </property>
-                        <!-- Transcription Tab -->
                         <widget class="QWidget" name="tabTranscription">
                             <attribute name="title">
                                 <string>Transcription</string>
@@ -317,7 +319,6 @@
                                 </item>
                             </layout>
                         </widget>
-                        <!-- Chat Tab -->
                         <widget class="QWidget" name="tabChat">
                             <attribute name="title">
                                 <string>Chat</string>
@@ -335,6 +336,13 @@
                                 <property name="bottomMargin">
                                     <number>0</number>
                                 </property>
+                                <item>
+                                    <widget class="QPushButton" name="clearChatButton">
+                                        <property name="text">
+                                            <string>Clear</string>
+                                        </property>
+                                    </widget>
+                                </item>
                                 <item>
                                     <widget class="QListWidget" name="llmChatList">
                                         <property name="font">
