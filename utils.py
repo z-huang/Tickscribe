@@ -1,5 +1,4 @@
 
-from mlx_lm import load, stream_generate
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QWidget
