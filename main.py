@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QInputDialog,
 from RealtimeSTT import AudioToTextRecorder
 
 from database import Database
-from utils import load_ui_widget
+from utils import clean_str, load_ui_widget
 from workers import FileTranscriptionWorker, LLMWorker, TranscriptionWorker
 
 
@@ -250,6 +250,7 @@ class MainWindow(QMainWindow):
 
     def on_realtime_transcription_update(self, s):
         """Handle real-time transcription updates (partial results)"""
+        s = clean_str(s)
         self.update_buffer = s
         QMetaObject.invokeMethod(
             self.update_timer, "start", Qt.QueuedConnection)

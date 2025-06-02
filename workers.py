@@ -3,6 +3,8 @@ from mlx_lm import load, stream_generate
 from PySide6.QtCore import QObject, Signal, Slot
 from RealtimeSTT import AudioToTextRecorder
 
+from utils import clean_str
+
 # Worker for real-time transcription from audio input
 
 
@@ -21,8 +23,10 @@ class TranscriptionWorker(QObject):
         # Continuously check for new transcribed text while running
         while self._running and not self.recorder.is_shut_down:
             s = self.recorder.text()
+            s = clean_str(s)
             if s:
-                self.stabilized.emit(s)  # Emit new stabilized text
+                # Emit new stabilized text
+                self.stabilized.emit(s)
         self.finished.emit()  # Emit finished signal when done
 
     def stop(self):

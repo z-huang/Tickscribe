@@ -14,3 +14,21 @@ def load_ui_widget(path: str, parent: QWidget = None) -> QWidget:
     if widget is None:
         raise RuntimeError(f"Failed to load UI from: {path}")
     return widget
+
+
+BAD_WORDS = {
+    'shit',
+    'fuck',
+}
+
+
+def clean_str(s):
+    processed_words = []
+    for word in s.split():
+        for bad_word in BAD_WORDS:
+            if bad_word in word.lower():
+                processed_words.append('*' * len(word))
+                break
+        else:
+            processed_words.append(word)
+    return ' '.join(processed_words)
